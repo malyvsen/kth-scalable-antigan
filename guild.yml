@@ -1,0 +1,13 @@
+train-reconstructor:
+  description: Train the network which reconstructs the noise used to generate an image
+  main: train_reconstructor
+  flags-dest: args:click
+  flags-import: all
+  output-scalars: no
+
+generate-examples:
+  description: Generate examples using the pre-trained GAN
+  main: generate_examples
+  flags-dest: args:click
+  flags-import: all
+  output-scalars: no
