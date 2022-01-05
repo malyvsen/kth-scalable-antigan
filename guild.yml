@@ -4,6 +4,9 @@ train-reconstructor:
   flags-dest: args:click
   flags-import: all
   output-scalars: no
+  requires:
+    - operation: generate-examples
+      target-path: examples
 
 generate-examples:
   description: Generate examples using the pre-trained GAN
