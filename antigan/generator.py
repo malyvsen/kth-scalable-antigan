@@ -29,13 +29,19 @@ class Generator:
         if noise is None:
             noise = self.make_noise()
         with torch.no_grad():
-            output = self.big_gan(noise, self.class_vector, self.truncation)
+            output = self.big_gan(
+                noise.unsqueeze(0), self.class_vector, self.truncation
+            )
         return convert_to_images(output)[0]
 
     def make_noise(self) -> torch.Tensor:
-        return torch.from_numpy(
-            truncated_noise_sample(truncation=self.truncation, batch_size=1)
-        ).to(self.device)
+        return (
+            torch.from_numpy(
+                truncated_noise_sample(truncation=self.truncation, batch_size=1)
+            )
+            .squeeze(0)
+            .to(self.device)
+        )
 
     @cached_property
     def class_vector(self):
