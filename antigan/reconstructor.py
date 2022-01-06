@@ -1,4 +1,4 @@
-from functools import reduce
+from .config import noise_dimensionality
 import torch
 from typing import List
 from .residual_block import ResidualBlock
@@ -38,7 +38,9 @@ class Reconstructor(torch.nn.Module):
             )
             for channel in range(num_conv_channels)
         )
-        self.head = torch.nn.Linear(num_conv_channels * num_adapter_units, 128)
+        self.head = torch.nn.Linear(
+            num_conv_channels * num_adapter_units, noise_dimensionality
+        )
 
     def forward(self, image):
         convolved: torch.Tensor = self.convolutional(
