@@ -11,7 +11,7 @@ class Reconstructor(torch.nn.Module):
         num_conv_channels: int,
         kernel_size: int,
         downsampling: int,
-        dense_widths: List[int],
+        num_adapter_units: int,
     ):
         super().__init__()
         self.convolutional = torch.nn.Sequential(
@@ -30,20 +30,28 @@ class Reconstructor(torch.nn.Module):
                 for _ in range(num_conv_layers)
             ]
         )
-        first_dense_width = (
-            num_conv_channels * int(512 / downsampling ** num_conv_layers) ** 2
+        final_image_size = 512 // downsampling ** num_conv_layers
+        self.adapters = torch.nn.ModuleList(
+            torch.nn.Sequential(
+                torch.nn.Linear(final_image_size ** 2, num_adapter_units),
+                torch.nn.LeakyReLU(),
+            )
+            for channel in range(num_conv_channels)
         )
-        self.dense = torch.nn.Sequential(
-            *[
-                torch.nn.Sequential(
-                    torch.nn.Linear(prev_width, width), torch.nn.LeakyReLU()
-                )
-                for prev_width, width in zip(
-                    [first_dense_width] + dense_widths, dense_widths + [128]
-                )
-            ]
-        )
+        self.head = torch.nn.Linear(num_conv_channels * num_adapter_units, 128)
 
     def forward(self, image):
-        convolved: torch.Tensor = self.convolutional(image)
-        return self.dense(convolved.flatten(start_dim=1))
+        convolved: torch.Tensor = self.convolutional(
+            image
+        )  # batch, channels, height, width
+        to_adapt = convolved.flatten(start_dim=2).permute(
+            1, 0, 2
+        )  # channels, batch, height * width
+        adapted = torch.stack(
+            [
+                adapter(channel_slice)
+                for channel_slice, adapter in zip(to_adapt, self.adapters)
+            ],
+            dim=1,
+        )  # batch, channels, num_adapter_units
+        return self.head(adapted.flatten(start_dim=1))
