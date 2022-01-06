@@ -1,3 +1,10 @@
+app:
+  description: Run the GUI used to encode/decode messages in images
+  exec: streamlit run .guild/sourcecode/app.py
+  output-scalars: no
+  requires:
+    - operation: train-reconstructor
+
 train-reconstructor:
   description: Train the network which reconstructs the noise used to generate an image
   main: train_reconstructor
