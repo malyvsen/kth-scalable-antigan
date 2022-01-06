@@ -1,2 +1,3 @@
 class_id = 970  # "alp" class in WordNet
-truncation = 0.4
+noise_intensity = 1
+noise_dimensionality = 128

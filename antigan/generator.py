@@ -1,27 +1,26 @@
 from dataclasses import dataclass
 from functools import cached_property
+import numpy as np
 from PIL import Image
 from pytorch_pretrained_biggan import (
     BigGAN,
-    truncated_noise_sample,
     convert_to_images,
 )
 import torch
+from .config import noise_intensity, noise_dimensionality
 
 
 @dataclass(frozen=True)
 class Generator:
     big_gan: BigGAN
     class_id: int
-    truncation: float
     device: torch.device
 
     @classmethod
-    def pretrained(cls, class_id: int, truncation: float, device: torch.device):
+    def pretrained(cls, class_id: int, device: torch.device):
         return cls(
             big_gan=BigGAN.from_pretrained("biggan-deep-512").to(device),
             class_id=class_id,
-            truncation=truncation,
             device=device,
         )
 
@@ -30,18 +29,16 @@ class Generator:
             noise = self.make_noise()
         with torch.no_grad():
             output = self.big_gan(
-                noise.unsqueeze(0), self.class_vector, self.truncation
+                noise.unsqueeze(0), self.class_vector, noise_intensity
             )
         return convert_to_images(output)[0]
 
     def make_noise(self) -> torch.Tensor:
-        return (
-            torch.from_numpy(
-                truncated_noise_sample(truncation=self.truncation, batch_size=1)
+        return torch.from_numpy(
+            np.random.choice(
+                [-noise_intensity, 0, noise_intensity], size=noise_dimensionality
             )
-            .squeeze(0)
-            .to(self.device)
-        )
+        ).to(self.device)
 
     @cached_property
     def class_vector(self):
