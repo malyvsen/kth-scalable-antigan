@@ -19,7 +19,7 @@ def main(num_examples: int, device: str):
     for example_idx, noise_vector in enumerate(
         tqdm(noise_vectors, desc="Generating examples")
     ):
-        generator.generate(noise_vector).save(f"images/image_{example_idx}.png")
+        generator.generate(noise_vector).save(f"image_{example_idx}.png")
 
 
 main()

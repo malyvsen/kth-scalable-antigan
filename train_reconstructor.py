@@ -11,6 +11,7 @@ import torch
 @click.option("--learning_rate", type=float, default=1e-3)
 @click.option("--num_conv_layers", type=int, default=3)
 @click.option("--num_conv_channels", type=int, default=16)
+@click.option("--kernel_size", type=int, default=3)
 @click.option("--downsampling", type=int, default=4)
 @click.option("--dense_width", type=int, default=256)
 @click.option("--device", type=str, default="cpu")
