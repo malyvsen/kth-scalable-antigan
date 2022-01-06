@@ -13,7 +13,7 @@ from PIL import Image
 @click.option("--num_conv_channels", type=int, default=16)
 @click.option("--kernel_size", type=int, default=3)
 @click.option("--downsampling", type=int, default=4)
-@click.option("--dense_width", type=int, default=256)
+@click.option("--num_adapter_units", type=int, default=16)
 @click.option("--device", type=str, default="cpu")
 
 def parse_data():
@@ -43,7 +43,7 @@ def main(
     num_conv_channels: int,
     kernel_size: int,
     downsampling: int,
-    dense_width: int,
+    num_adapter_units: int,
     device: str,
 ):
     device = torch.device(device)
@@ -52,7 +52,7 @@ def main(
         num_conv_channels=num_conv_channels,
         kernel_size=kernel_size,
         downsampling=downsampling,
-        dense_widths=[dense_width],
+        num_adapter_units=num_adapter_units,
     ).to(device)
     optimizer = torch.optim.Adam(reconstructor.parameters(), lr=learning_rate)
 

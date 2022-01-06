@@ -10,7 +10,6 @@ from tqdm.auto import tqdm
 @click.option("--device", type=str, default="cpu")
 def main(num_examples: int, device: str):
     generator = Generator.pretrained(
-        truncation=config.truncation,
         class_id=config.class_id,
         device=torch.device(device),
     )
