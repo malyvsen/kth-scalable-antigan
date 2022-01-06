@@ -30,10 +30,8 @@ class Reconstructor(torch.nn.Module):
                 for _ in range(num_conv_layers)
             ]
         )
-        first_dense_width = num_conv_channels * reduce(
-            (lambda size, _: (size - kernel_size + 1) // downsampling),
-            range(num_conv_layers),
-            initial=512,
+        first_dense_width = (
+            num_conv_channels * int(512 / downsampling ** num_conv_layers) ** 2
         )
         self.dense = torch.nn.Sequential(
             *[
