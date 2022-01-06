@@ -39,6 +39,7 @@ def main(
     examples_path = Path.cwd() / "examples"
     with open(examples_path / "noise.npy", "rb") as noise_file:
         noise_vectors = torch.from_numpy(np.load(noise_file)).to(device)
+        print(type(noise_vectors))
     # TODO: iterate over the data and train the reconstructor
 
 
