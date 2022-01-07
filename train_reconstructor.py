@@ -1,10 +1,14 @@
 from antigan import Reconstructor
+from antigan import dataset
+from antigan import train
 import click
 import numpy as np
 from pathlib import Path
 import torch
+import torch.nn as nn
 from PIL import Image
 from torchvision import transforms
+
 
 @click.command()
 @click.option("--num_batches", type=int, required=True)
@@ -16,7 +20,6 @@ from torchvision import transforms
 @click.option("--downsampling", type=int, default=4)
 @click.option("--num_adapter_units", type=int, default=16)
 @click.option("--device", type=str, default="cpu")
-
 def main(
     num_batches: int,
     batch_size: int,
@@ -37,40 +40,45 @@ def main(
         num_adapter_units=num_adapter_units,
     ).to(device)
     optimizer = torch.optim.Adam(reconstructor.parameters(), lr=learning_rate)
+    criterion = nn.MSELoss()
 
-    train_labels= []
-    train_images= []
+    train_labels = []
+    train_images = []
 
-    mean = torch.tensor([0.485, 0.456, 0.406], dtype=torch.float32)
-    std = torch.tensor([0.229, 0.224, 0.225], dtype=torch.float32)
+    transform = transforms.Compose(
+        [
+            transforms.ToTensor(),
+        ]
+    )
 
-    transform = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Normalize(mean=mean, std=std)
-    ])
-    
     examples_path = Path.cwd() / "examples"
-    img_path = '/Users/aanair/Library/Caches/pypoetry/virtualenvs/kth-scalable-antigan-OYKsXUJ2-py3.9/.guild/runs/14ecd370b97e4a2abe3cb8c7377d6009/'
     with open(examples_path / "noise.npy", "rb") as noise_file:
         noise_vectors = torch.from_numpy(np.load(noise_file)).to(device)
-    
-    for counter in range(6125):
+
+    for counter in range(5):
         train_labels.append(noise_vectors[counter])
-        
-        img = Image.open(img_path+'image_'+str(counter)+'.png')
-        
-        imarray = np.array(img, dtype=np.double)/255
+
+        img = Image.open(examples_path / f"image_" + str(counter) + ".png")
+
+        imarray = np.array(img, dtype=np.double) / 255
         train_images.append(imarray)
 
-    train_dataloader = torch.utils.data.DataLoader(
-    dataset=train_images,
-    batch_size=batch_size,
-    shuffle=False,
-    num_workers=2
-)
-    tensor_train_images = torch.tensor([train_images[i] for i in train], dtype=torch.float32, device=device)
+    train_dataset = dataset.AntiganDataset(train_images, train_labels, transform)
 
-    print(len(train_labels))
-    print(len(train_images))
+    train_dataloader = torch.utils.data.DataLoader(
+        dataset=train_dataset, batch_size=batch_size, shuffle=False, num_workers=2
+    )
+
+    num_epochs = 5
+    train_loss = []
+
+    for epoch in range(num_epochs):
+        train_loss.append(
+            train.model_train(
+                epoch, train_dataloader, device, reconstructor, criterion, optimizer
+            )
+        )
+        torch.save(reconstructor, "reconstructor_" + str(epoch) + ".pth")
+
 
 main()
