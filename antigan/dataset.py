@@ -1,29 +1,34 @@
-import torch.utils.data as data
+from functools import cached_property
 import numpy as np
+from pathlib import Path
+from PIL import Image
+import torch
+import torchvision as tv
 
-class AntiganDataset(data.Dataset):
-    def __init__(self, train_images, train_target, transform):
-        self.image_set = train_images 
-        self.target_set = train_target  
 
-        self.transform = transform
- 
+class Dataset(torch.utils.data.Dataset):
+    def __init__(self, examples_path: Path):
+        self.examples_path = examples_path
 
     def __getitem__(self, index):
-        target = self.target_set[index]
-        img = self.image_set[index]
-
-        img = self.transform(img)
-        
-        target = np.array(target)
-
-        #target = self.transform(target)
-
-        sample = {'img': img, 'annot': target}
-        return sample
+        return (
+            self.transform(Image.open(self.examples_path / f"image_{index}.png")),
+            self.noise[index],
+        )
 
     def __len__(self):
-        return len(self.image_set)
+        return self.num_examples
 
-    def load_annotations(self, index):
-        return np.array(self.target_set[index])
+    @cached_property
+    def noise(self):
+        return torch.from_numpy(
+            np.load(self.examples_path / "noise.npy")[: self.num_examples]
+        ).float()
+
+    @cached_property
+    def num_examples(self):
+        return sum(1 for image_path in self.examples_path.glob("*.png"))
+
+    @cached_property
+    def transform(self):
+        return tv.transforms.ToTensor()
