@@ -45,7 +45,7 @@ def generate():
 
 
 def reconstruct():
-    image_file = st.file_uploader("Picture of mountains", type=["png", "jpg"])
+    image_file = st.file_uploader("Picture of mountains", type=["png", "jpg", "jpeg"])
     if image_file is None:
         return
     image = Image.open(image_file).resize((512, 512))
