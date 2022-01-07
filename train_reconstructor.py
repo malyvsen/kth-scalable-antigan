@@ -10,7 +10,7 @@ from tqdm.auto import trange
 @click.command()
 @click.option("--num_batches", type=int, required=True)
 @click.option("--batch_size", type=int, required=True)
-@click.option("--learning_rate", type=float, default=1e-3)
+@click.option("--learning_rate", type=float, default=1e-2)
 @click.option("--num_conv_layers", type=int, default=3)
 @click.option("--num_conv_channels", type=int, default=4)
 @click.option("--kernel_size", type=int, default=3)
