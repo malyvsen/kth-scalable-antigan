@@ -3,11 +3,12 @@ import click
 from pathlib import Path
 import pickle
 import torch
-from tqdm.auto import tqdm
+from torch.utils.tensorboard import SummaryWriter
+from tqdm.auto import trange
 
 
 @click.command()
-@click.option("--num_epochs", type=int, required=True)
+@click.option("--num_batches", type=int, required=True)
 @click.option("--batch_size", type=int, required=True)
 @click.option("--learning_rate", type=float, default=1e-3)
 @click.option("--num_conv_layers", type=int, default=3)
@@ -18,7 +19,7 @@ from tqdm.auto import tqdm
 @click.option("--num_workers", type=int, default=2)
 @click.option("--device", type=str, default="cpu")
 def main(
-    num_epochs: int,
+    num_batches: int,
     batch_size: int,
     learning_rate: float,
     num_conv_layers: int,
@@ -41,24 +42,34 @@ def main(
     criterion = torch.nn.MSELoss()
 
     dataset = Dataset(Path.cwd() / "examples")
-    train_dataloader = torch.utils.data.DataLoader(
-        dataset=dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers
+    make_data_iterator = lambda: iter(
+        torch.utils.data.DataLoader(
+            dataset=dataset,
+            batch_size=batch_size,
+            shuffle=False,
+            num_workers=num_workers,
+        )
     )
+    data_iterator = make_data_iterator()
 
-    for epoch_idx in range(num_epochs):
-        for images, vectors in tqdm(
-            train_dataloader, desc=f"Epoch {epoch_idx + 1}/{num_epochs}"
-        ):
-            reconstructed_noise = reconstructor(images.to(device))
-            loss = criterion(reconstructed_noise, vectors.to(device))
-            print(f" Epoch: {epoch_idx+1} - Loss: {loss}"  )
+    summary_writer = SummaryWriter()
+    for batch_idx in trange(num_batches):
+        try:
+            images, vectors = next(data_iterator)
+        except StopIteration:
+            dataloader = make_data_iterator()
+            images, vectors = next(data_iterator)
+        reconstructed_noise = reconstructor(images.to(device))
+        loss = criterion(reconstructed_noise, vectors.to(device))
+        summary_writer.add_scalar("loss", loss.item(), global_step=batch_idx)
 
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
 
-        with open("reconstructor.pkl", "wb") as reconstructor_file:
-            pickle.dump(reconstructor, reconstructor_file)
+    with open("reconstructor.pkl", "wb") as reconstructor_file:
+        pickle.dump(reconstructor, reconstructor_file)
+    summary_writer.close()
 
 
 main()
