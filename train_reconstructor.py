@@ -15,6 +15,7 @@ from tqdm.auto import tqdm
 @click.option("--kernel_size", type=int, default=3)
 @click.option("--downsampling", type=int, default=4)
 @click.option("--num_adapter_units", type=int, default=16)
+@click.option("--num_workers", type=int, default=2)
 @click.option("--device", type=str, default="cpu")
 def main(
     num_epochs: int,
@@ -25,6 +26,7 @@ def main(
     kernel_size: int,
     downsampling: int,
     num_adapter_units: int,
+    num_workers: int,
     device: str,
 ):
     device = torch.device(device)
@@ -40,7 +42,7 @@ def main(
 
     dataset = Dataset(Path.cwd() / "examples")
     train_dataloader = torch.utils.data.DataLoader(
-        dataset=dataset, batch_size=batch_size, shuffle=False, num_workers=2
+        dataset=dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers
     )
 
     for epoch_idx in range(num_epochs):
@@ -49,6 +51,7 @@ def main(
         ):
             reconstructed_noise = reconstructor(images.to(device))
             loss = criterion(reconstructed_noise, vectors.to(device))
+            print(f" Epoch: {epoch_idx+1} - Loss: {loss}"  )
 
             optimizer.zero_grad()
             loss.backward()
