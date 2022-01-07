@@ -57,7 +57,7 @@ def main(
         try:
             images, vectors = next(data_iterator)
         except StopIteration:
-            dataloader = make_data_iterator()
+            data_iterator = make_data_iterator()
             images, vectors = next(data_iterator)
         reconstructed_noise = reconstructor(images.to(device))
         loss = criterion(reconstructed_noise, vectors.to(device))
