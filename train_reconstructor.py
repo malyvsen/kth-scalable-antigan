@@ -11,29 +11,26 @@ from tqdm.auto import trange
 @click.option("--num_batches", type=int, required=True)
 @click.option("--batch_size", type=int, required=True)
 @click.option("--learning_rate", type=float, default=1e-3)
-@click.option("--num_conv_layers", type=int, default=3)
-@click.option("--num_conv_channels", type=int, default=4)
-@click.option("--kernel_size", type=int, default=3)
-@click.option("--downsampling", type=int, default=4)
+@click.option("--downsampling", type=int, default=64)
+@click.option("--num_hidden_layers", type=int, default=2)
+@click.option("--hidden_width", type=int, default=256)
 @click.option("--num_workers", type=int, default=2)
 @click.option("--device", type=str, default="cpu")
 def main(
     num_batches: int,
     batch_size: int,
     learning_rate: float,
-    num_conv_layers: int,
-    num_conv_channels: int,
-    kernel_size: int,
     downsampling: int,
+    num_hidden_layers: int,
+    hidden_width: int,
     num_workers: int,
     device: str,
 ):
     device = torch.device(device)
     reconstructor = Reconstructor(
-        num_conv_layers=num_conv_layers,
-        num_conv_channels=num_conv_channels,
-        kernel_size=kernel_size,
         downsampling=downsampling,
+        num_hidden_layers=num_hidden_layers,
+        hidden_width=hidden_width,
     ).to(device)
     optimizer = torch.optim.Adam(reconstructor.parameters(), lr=learning_rate)
     criterion = torch.nn.MSELoss()
