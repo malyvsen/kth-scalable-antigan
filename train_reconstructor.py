@@ -12,10 +12,9 @@ from tqdm.auto import trange
 @click.option("--batch_size", type=int, required=True)
 @click.option("--learning_rate", type=float, default=1e-3)
 @click.option("--num_conv_layers", type=int, default=3)
-@click.option("--num_conv_channels", type=int, default=16)
+@click.option("--num_conv_channels", type=int, default=4)
 @click.option("--kernel_size", type=int, default=3)
 @click.option("--downsampling", type=int, default=4)
-@click.option("--num_adapter_units", type=int, default=16)
 @click.option("--num_workers", type=int, default=2)
 @click.option("--device", type=str, default="cpu")
 def main(
@@ -26,7 +25,6 @@ def main(
     num_conv_channels: int,
     kernel_size: int,
     downsampling: int,
-    num_adapter_units: int,
     num_workers: int,
     device: str,
 ):
@@ -36,7 +34,6 @@ def main(
         num_conv_channels=num_conv_channels,
         kernel_size=kernel_size,
         downsampling=downsampling,
-        num_adapter_units=num_adapter_units,
     ).to(device)
     optimizer = torch.optim.Adam(reconstructor.parameters(), lr=learning_rate)
     criterion = torch.nn.MSELoss()
