@@ -59,6 +59,11 @@ def main(
         reconstructed_noise = reconstructor(images.to(device))
         loss = criterion(reconstructed_noise, vectors.to(device))
         summary_writer.add_scalar("loss", loss.item(), global_step=batch_idx)
+        summary_writer.add_scalar(
+            "bit_accuracy",
+            ((vectors.cpu() < 0) == (reconstructed_noise.cpu() < 0)).float().mean(),
+            global_step=batch_idx,
+        )
 
         optimizer.zero_grad()
         loss.backward()
