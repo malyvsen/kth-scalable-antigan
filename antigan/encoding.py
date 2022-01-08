@@ -9,10 +9,15 @@ def text_to_noise(text: str) -> np.ndarray:
     noise_bits = [
         bit for character in padded_text for bit in character_to_noise(character)
     ]
-    return np.array(
-        noise_bits + [0] * (noise_dimensionality - len(noise_bits)),
-        dtype=np.float32,
-    )
+    return np.concatenate(
+        [
+            noise_bits,
+            np.random.choice(
+                [-noise_intensity, noise_intensity],
+                noise_dimensionality - len(noise_bits),
+            ),
+        ]
+    ).astype(np.float32)
 
 
 def character_to_noise(character: str):

@@ -36,7 +36,7 @@ class Generator:
     def make_noise(self) -> torch.Tensor:
         return torch.from_numpy(
             np.random.choice(
-                [-noise_intensity, 0, noise_intensity], size=noise_dimensionality
+                [-noise_intensity, noise_intensity], size=noise_dimensionality
             )
         ).to(self.device)
 
