@@ -5,6 +5,15 @@ app:
   requires:
     - operation: train-reconstructor
 
+evaluate-reconstructor:
+  description: Evaluate the reconstructor's accuracy large-scale
+  main: evaluate_reconstructor
+  output-scalars: no
+  requires:
+    - operation: train-reconstructor
+    - operation: generate-examples
+      target-path: examples
+
 train-reconstructor:
   description: Train the network which reconstructs the noise used to generate an image
   main: train_reconstructor
