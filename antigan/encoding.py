@@ -1,7 +1,7 @@
 import math
 import numpy as np
 import string
-from .config import noise_intensity, noise_dimensionality
+from .config import noise_intensity, noise_dimensionality, redundance
 
 
 def text_to_noise(text: str) -> np.ndarray:
@@ -25,9 +25,11 @@ def character_to_noise(character: str):
     index = allowed_characters.find(character)
     assert index >= 0
     binary = bin(index)[2:]
-    padded_binary = "0" * (bits_per_character - len(binary)) + binary
+    padded_binary = "0" * (bits_per_certain_character - len(binary)) + binary
     return [
-        -noise_intensity if bit == "0" else noise_intensity for bit in padded_binary
+        -noise_intensity if bit == "0" else noise_intensity
+        for bit in padded_binary
+        for redundant_idx in range(redundance)
     ]
 
 
@@ -42,16 +44,24 @@ def noise_to_text(noise: np.ndarray) -> str:
 
 def noise_to_character(noise: np.ndarray):
     assert len(noise) == bits_per_character
-    binary = "".join("0" if value < 0 else "1" for value in noise)
+    bits = [
+        sum(noise[index] > 0 for index in indices) > redundance / 2
+        for indices in zip(
+            *[
+                range(start_idx, bits_per_character, redundance)
+                for start_idx in range(redundance)
+            ]
+        )
+    ]
+    binary = "".join("1" if bit else "0" for bit in bits)
     index = int(binary, 2)
     try:
         return allowed_characters[index]
     except IndexError:
-        return "?"
+        return "#"
 
 
-allowed_characters = (
-    string.digits + string.ascii_letters + string.punctuation + string.whitespace
-)
-bits_per_character = math.ceil(math.log2(len(allowed_characters)))
+allowed_characters = string.ascii_lowercase + " -,.?!"
+bits_per_certain_character = math.ceil(math.log2(len(allowed_characters)))
+bits_per_character = bits_per_certain_character * redundance
 max_text_characters = noise_dimensionality // bits_per_character

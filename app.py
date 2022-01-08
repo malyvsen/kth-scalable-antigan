@@ -34,7 +34,7 @@ def generate():
     generating_message = st.empty()
     generating_message.info("Generating, this might take a while")
     generator = load_generator()
-    image = generator.generate(text_to_noise(text))
+    image = generator.generate(torch.from_numpy(text_to_noise(text)))
     generating_message.empty()
     st.image(image, caption="This image contains your message. Share wisely!")
 
