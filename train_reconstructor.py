@@ -10,7 +10,7 @@ from tqdm.auto import trange
 @click.command()
 @click.option("--num_batches", type=int, required=True)
 @click.option("--batch_size", type=int, required=True)
-@click.option("--learning_rate", type=float, default=1e-2)
+@click.option("--learning_rate", type=float, default=5e-3)
 @click.option("--num_conv_layers", type=int, default=3)
 @click.option("--num_conv_channels", type=int, default=4)
 @click.option("--kernel_size", type=int, default=3)
@@ -36,14 +36,14 @@ def main(
         downsampling=downsampling,
     ).to(device)
     optimizer = torch.optim.Adam(reconstructor.parameters(), lr=learning_rate)
-    criterion = torch.nn.MSELoss()
+    criterion = torch.nn.BCEWithLogitsLoss()
 
     dataset = Dataset(Path.cwd() / "examples")
     make_data_iterator = lambda: iter(
         torch.utils.data.DataLoader(
             dataset=dataset,
             batch_size=batch_size,
-            shuffle=False,
+            shuffle=True,
             num_workers=num_workers,
         )
     )
@@ -56,12 +56,12 @@ def main(
         except StopIteration:
             data_iterator = make_data_iterator()
             images, vectors = next(data_iterator)
-        reconstructed_noise = reconstructor(images.to(device))
-        loss = criterion(reconstructed_noise, vectors.to(device))
-        summary_writer.add_scalar("loss", loss.item(), global_step=batch_idx)
+        reconstructed_logits = reconstructor(images.to(device))
+        loss = criterion(reconstructed_logits, (vectors.to(device) > 0).float())
+        summary_writer.add_scalar("loss", loss, global_step=batch_idx)
         summary_writer.add_scalar(
             "bit_accuracy",
-            ((vectors.cpu() < 0) == (reconstructed_noise.cpu() < 0)).float().mean(),
+            ((vectors < 0) == (reconstructed_logits < 0)).float().mean(),
             global_step=batch_idx,
         )
 
